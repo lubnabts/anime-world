@@ -1,0 +1,511 @@
+from tabulate import tabulate
+import pandas as pd
+import re
+import sys
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+
+#here is where I'm saving the users login information
+users={"emails":["lydalala17@eng.just.edu.jo","lubnadalala999@gmail.com"],"usernames":["lubna","lolo"],"passwards":["Ll_123456","Mm_123456"],"notifications":[[],[]]}
+accounts=users["emails"]
+passwards=users["passwards"]
+usernames=users["usernames"]
+notifications=users["notifications"]
+add=[]
+ListOfLists={"lydalala17@just.edu.jo":{"want to watch":[],"watched":[],"Watching Now":[]},"lubnadalala999@gmail.com":{"want to watch":[],"watched":[],"Watching Now":[]}}
+data=pd.DataFrame(ListOfLists)
+red=['animal abuse', 'bullying' ,'cannibalism' ,'domestic abuse' ,'drug use','emotional abuse', 'explicit sex' ,'explicit violence', 'incest','mature themes', 'nudity', 'physical abuse', 'prostitution' ,'self-harm', 'sexual abuse' ,'sexual content', 'suicide', 'violence',"none"]
+
+
+#here is the complete anime list
+animes=pd.read_excel(r"C:\Users\user\Downloads\animeplanet.xlsx")
+
+names=animes["Name"]
+number_of_episodes=animes["Episodes"]
+genre=animes["genre"]
+started_in_year=animes["Release_year"]
+Type=animes["Type"]
+rating=animes["Rating"]
+rank=animes["Rank"]
+description=animes["Description"]
+warning=animes["Content_Warning"]
+
+
+#function to close everything
+def closeall():
+    print("thank you for visiting us")
+    sys.exit()
+
+#function for choice 4 in function search with content warning        
+def choice4(email,choice):
+    search=input("choose:\n 1.TV\n 2.OVA\n 3.Web\n ---> ").strip()
+    if search=="1":
+        for i in range(len(animes)):
+           if animes["Type"][i]=="TV":  
+              print(names[i])
+    elif search=="2":
+        for i in range(len(animes)):
+            if animes["Type"][i]=="OVA":
+               
+                print(names[i])
+    elif search=="3":
+        for i in range(len(animes)):
+            if animes["Type"][i]=="WEB":
+               
+                print(names[i])
+    else:
+        print("invalid")
+        choice4(email,choice) 
+#choice for in search but without content warning
+def choice4b(email,choice):
+    search=input("choose:\n 1.TV\n 2.OVA\n 3.Web\n ---> ").strip()
+    if search=="1":
+        for i in range(len(animes)):
+           if animes["Type"][i]=="TV" and (animes["Content_Warning"][i]=="none"):  
+              print(names[i])
+    elif search=="2":
+        for i in range(len(animes)):
+            if animes["Type"][i]=="OVA" and (animes["Content_Warning"][i]=="none"):
+               
+                print(names[i])
+    elif search=="3":
+        for i in range(len(animes)):
+            if animes["Type"][i]=="WEB" and (animes["Content_Warning"][i]=="none"):
+               
+                print(names[i])
+    else:
+        print("invalid")
+        choice4(email,choice)
+#function to show each user their list
+def showmylist(email):
+    if email in ListOfLists:
+        you=ListOfLists[email]
+        mylist=pd.DataFrame(you)
+        print(tabulate(mylist, headers='keys', tablefmt='psql'))
+        afterlogin(email)
+        
+#Function to pick the anime
+def Pick(email):
+    print("------------------------------------------")
+    name=input("please enter the name of Anime: ").lower().strip()
+    if email in ListOfLists:
+        you=ListOfLists[email]
+        coming=you["want to watch"]
+        watched=you["watched"]
+        Now=you["Watching Now"]
+    else:  
+        ListOfLists[email]={"want to watch":[],"watched":[],"Watching Now":[]}
+        you=ListOfLists[email]
+        coming=you["want to watch"]
+        watched=you["Watched"]
+        Now=you["Watching Now"]
+    
+    choice=1
+    for i in animes["Name"]:
+        if animes["Name"].eq(name).any():
+            print("Please Select one of these:")
+            print("1-want to watch")
+            print("2-Watched")
+            print("3-Watching Now")
+            num=int(input("Choose a number :==>").strip())
+            if num==1:
+                coming.append(name)
+                watched.append(" ")
+                Now.append("")
+                break
+            elif num==2:
+                watched.append(name)
+                coming.append(" ")
+                Now.append(" ")
+                break
+            elif num==3:
+                Now.append(name)
+                coming.append(" ")
+                watched.append(" ")
+                break
+            else:
+                print("invalid")
+                choice=input("do you want to:\n 1.continue\n 0.go back\n --->").strip()
+                if choice=="1":
+                    Pick(email)
+                elif choice=="0":
+                    afterlogin(email)
+                    
+                break
+    else:
+        print("we don't have this anime")
+        choice=input("do you want to:\n 1.continue\n 0.go back\n --->").strip()
+        if choice=="1":
+            Pick(email)
+        elif choice=="0":
+            afterlogin(email)
+    
+    
+    if choice==0:
+        closeall()
+    else:
+        choice=input("do you want to:\n 1.continue\n 0.go back\n --->").strip()
+        if choice=="1":
+            Pick(email)
+        elif choice=="0":
+            afterlogin(email)
+                
+            
+    
+#function to choose how to search        
+def search(email):
+    
+    print("------------------------------------------") 
+    with_or_without=input("would you like to exclude the animes with content warning?\n 1.yes\n 2.no\n--->").strip()
+    if with_or_without=="1":
+        choice=input("do you want to search by:\n 1.name\n 2.genre\n 3.the year\n 4.the type\n 0.go back\n--->").strip()           
+        while choice !="0":
+              if choice=="1":
+                search=input("type the name or part of it ").strip()
+                c=0
+                for i in animes["Name"]:
+                    inn=(animes.index[animes["Name"]==i]).tolist()
+                    if (search in i) and (animes["Content_Warning"][inn[0]]=="none"):
+                        print(i)
+                        
+                        c=+1
+                if c==0:
+                       print("sorry we don't have this anime but we will try our best to add it")
+            
+              elif choice=="2":
+                 c=0
+                 search=input("type the genre you want: ").strip()
+                 for i in range(len(animes)):
+                       if search in animes["genre"][i] and (animes["Content_Warning"][i]=="none"):
+                           print(animes["Name"][i])
+                           c=+1
+                 if c==0:
+                           print("sorry we don't have this genre")
+              elif choice=="3":
+                 c=0
+                 search=int(input("type the year  ").strip())
+                 for i in range(len(animes)):
+                       if animes["Release_year"][i]==search and (animes["Content_Warning"][i]=="none"):
+                        
+                           print(animes["Name"][i])
+                           c=+1
+                 if c==0:
+                           print("sorry we don't have any anime in this year")
+                           
+              elif choice=="4":
+                  choice4b(email,choice)
+                  
+              else:
+                  print("invalid")
+              if choice==0:
+                  closeall()
+              else:
+                  print("------------------------------------------")
+                  choice2=input("do you want to:\n 1.continue\n 0.go back\n --->").strip()
+                  if choice2=="1":
+                        choice=choice
+               
+                  elif choice2=="0":
+                      print("------------------------------------------")
+                      choice=input("do you want to search by:\n 1.name\n 2.genre\n 3.the year\n 4.the type\n 0.go back\n--->").strip()  
+                  else:
+                      print("invalid")
+                 
+        else:
+              afterlogin(email)
+    else:   
+        choice=input("do you want to search by:\n 1.name\n 2.genre\n 3.the year\n 4.the type\n 0.go back\n--->").strip()           
+        while choice !="0":
+              if choice=="1":
+                search=input("type the name or part of it ").strip()
+                c=0
+                for i in animes["Name"]:
+                    
+                    if search in i:
+                        print(i)
+                        
+                        c=+1
+                if c==0:
+                       print("sorry we don't have this anime but we will try our best to add it")
+            
+              elif choice=="2":
+                 c=0
+                 search=input("type the genre you want: ").strip()
+                 for i in range(len(animes)):
+                       if search in animes["genre"][i]:
+                           print(animes["Name"][i])
+                           c=+1
+                 if c==0:
+                           print("sorry we don't have this genre")
+              elif choice=="3":
+                 c=0
+                 search=int(input("type the year  ").strip())
+                 for i in range(len(animes)):
+                       if animes["Release_year"][i]==search:
+                        
+                           print(animes["Name"][i])
+                           c=+1
+                 if c==0:
+                           print("sorry we don't have any anime in this year")
+                           
+              elif choice=="4":
+                  choice4(email,choice)
+                  
+              else:
+                  print("invalid")
+              if choice==0:
+                  closeall()
+              else:
+                  print("------------------------------------------")
+                  choice2=input("do you want to:\n 1.continue\n 0.go back\n --->").strip()
+                  if choice2=="1":
+                        choice=choice
+               
+                  elif choice2=="0":
+                      print("------------------------------------------")
+                      choice=input("do you want to search by:\n 1.name\n 2.genre\n 3.the year\n 4.the type\n 0.go back\n--->").strip()  
+                  else:
+                      print("invalid")
+                 
+        else:
+              afterlogin(email)
+        
+#function to print out the list
+def printing_all_animes(email):
+    
+    
+    print(animes[["Name","Description"]])
+    if email=="lydalala17@eng.just.edu.jo":
+        helloadmin(email)
+    else:
+       afterlogin(email)
+
+#recommendations function
+def recommendations(email):
+    cv = CountVectorizer(tokenizer=lambda x:x.split(', '))
+    by_genre= cv.fit_transform(animes['genre'])
+    cos_score_animeg = cosine_similarity(by_genre)
+    anime_liked=input("what is the name of the anime you want to find somthing similar to?\n").lower().strip()
+    if anime_liked in animes["Name"].unique():
+        index_suka = animes[animes['Name']==anime_liked].index
+        index_suka[0]
+        anime_recom = list(enumerate(cos_score_animeg[index_suka[0]]))
+        anime_recom=pd.DataFrame(anime_recom)
+        rec=0
+        for i in range(len(anime_recom)):
+            if (anime_recom[1][i])>=0.60:
+                print("*",animes["Name"][i])
+                rec=+1
+        if rec==0:
+            print("can't find anything close to ",anime_liked)
+    else:
+        print("we don't have this anime")
+    choice=input("do you want to:\n 1.continue\n 0.go back\n --->").strip()
+    if choice=="1":
+        recommendations(email)
+    elif choice=="0":
+        afterlogin(email)
+#function to choose what to do                      
+def afterlogin(email):
+    print("------------------------------------------")
+    print(add)
+    choice=input("what would you like to do now?\n 1.show all the animes\n 2.search for an anime\n 3.change on my list\n 4.show my list\n 5.open my notifications\n 6.recommendations\n 7.log out\n-->").strip()           
+    if choice=="1":
+        printing_all_animes(email)  
+    elif choice=="2":
+        search(email)
+    elif choice=="3":  
+        Pick(email)
+    elif choice=="4":
+        showmylist(email)
+    elif choice=="5":
+        index=accounts.index(email)
+        user=notifications[index]
+        if user==[]:
+            print("you don't have any notifications")
+            afterlogin(email)
+        else:
+           print(user)
+           afterlogin(email)
+    elif choice=="6":
+        recommendations(email)
+    elif choice=="7":
+        home()
+    else:
+        print("somthing wrong")
+        afterlogin(email)
+#this for passward validitation
+def passvalid():
+    yourpass=input("enter your passward: ").strip()
+    n=0
+    l=0
+    while len(yourpass)<8:
+        print("short passward you need at least 8 charecters")
+        yourpass=input("enter your passward: ").strip()
+    for i in yourpass:
+        if i.isdigit():
+            n+=1
+        elif i.isalpha():
+            l+=1
+    if n>0 and l>0: 
+        passwards.append(yourpass)
+    else:
+        print("it must contain atleast one digit and at least one letter")
+        passvalid()
+# email validation
+def email_valid(new_email):
+    if re.match(r"[^@]+@[^@]+\.[^@]+", new_email):  
+        return True  
+    return False  
+#this is to enter the email aka sign in or sign up according to the user choice
+def oneortwo(start):
+    if start=="1":
+        email=input("what is your email? ").strip()
+        passward=input("enter your passward ").strip()
+        checking(email,passward)
+        
+    elif start=="2":
+        new_email=input("enter your email: ").strip()
+        
+        while email_valid(new_email)==False:
+            print("this is not a valid email try again")
+            new_email=input("enter your email: ").strip()
+            email_valid(new_email)
+        if new_email in accounts:
+            print("you are already registerd")
+            home()
+        
+        else:
+            accounts.append(new_email)
+            new_user=input("enter your username: ").strip()
+            while new_user in usernames:
+                print("this username is taken try another one")
+                new_user=input("enter your username: ").strip()
+            else:
+                usernames.append(new_user)
+            passvalid()
+            notifications.append([])
+            ListOfLists[new_email]={"want to watch":[],"watched":[],"Watching Now":[]}
+            home()
+    elif start=="3":
+        closeall()
+        
+    else:
+        print("invalid")
+        home()
+
+    
+#function to let the admin choose what does they want to add
+def helloadmin(email):
+    email="lydalala17@eng.just.edu.jo"
+    choice=input("what would you like to do:\n 1.add an anime to the list\n 2.add an ad\n 3.send notifications to the user\n 4.show me the list of users\n 5.log out\n---> ").strip()
+    if choice=="1":
+        anime_name=input("please enter the name of the anime you want to add: ").strip()
+        print("------------------------------------------------------------------")
+#        names.append(anime_name)
+        num_episodes=input("please enter the number of episodes: ").strip()
+        print("------------------------------------------------------------------")
+#        number_of_episodes.append(num_episodes)
+
+        genres=input("please enter the genres:\n put \",\" between each one ").strip()
+        print("------------------------------------------------------------------")
+#        genre.append(genres)
+
+        year=int(input("please enter the year the anime started in: ").strip())
+        print("------------------------------------------------------------------")
+#        started_in_year.append(year)
+
+        status=input("is the anime TV or OVA or Web? ").strip().upper()
+        print("------------------------------------------------------------------")
+#        Type.append(status)
+        story=input("please write a summary of the story:\n")
+        print("------------------------------------------------------------------\n")
+#        description.append(description)
+        warns=[]
+        warn=input(f"if the the story contains one of these:\n {red}\n copy and paste it \n-->")
+        while warn !="0":
+            print("enter the warnings one at a time")
+            print("type 0 if you finished adding warnings")
+            if warn not in red:
+                red.append(warn)
+                warn=input(f"if the the story contains one of these:\n {red}\n copy and paste it \n-->")
+                warns.append(warn)
+            else:
+               warn=input(f"if the the story contains one of these:\n {red}\n copy and paste it \n-->")
+               warns.append(warn)
+        animes.loc[len(animes)]={"Rank":0,"Name":anime_name,"Type":status,"Episodes":num_episodes,"genre":genres,"Rating":0,"Release_year":year,"Description":story,"Content_Warning":warns}
+#        animes2=animes.append(row,ignore_index = True)
+        
+
+
+        printing_all_animes(email)
+        
+    elif choice=="2":
+         ad=input("please write the text of the add: ").strip()
+         add.append(ad)
+         helloadmin(email)
+    elif choice=="3":
+         allorone=input("would you like to send the notification to:\n 1.all users\n 2.only one user\n--->").strip()
+         if allorone=="1":
+             notification=input("what would you like to tell the user?  " ).strip()
+             for i in notifications:
+                 i.append(notification)
+             helloadmin(email)
+         elif allorone=="2":
+             notification=input("what would you like to tell the user?  " ).strip()
+             print(usernames)
+             whichone=input("type the user name-->").strip()
+             if whichone in usernames:
+                 index=usernames.index(whichone)
+                 user=notifications[index]
+                 user.append(notification)
+             helloadmin(email)  
+    elif choice=="4":
+        print(usernames)
+        helloadmin(email)
+    elif choice=="5":
+        home()
+    else:
+        print("invalid")
+        helloadmin(email)
+    
+       
+    
+
+
+#this is to check the validity of the information used to log in
+def checking(email,passward):
+    
+    accounts=users["emails"]
+    passwards=users["passwards"]
+    usernames=users["usernames"]
+    #admin email
+    if email=="lydalala17@eng.just.edu.jo" and passward=="Ll_123456":
+                print("------------------------------------------")
+                print("welcome admin lubna")
+                print("------------------------------------------")
+                helloadmin(email)
+    else:
+       for i in accounts:
+
+    #users emails        
+            if i==email and passwards[accounts.index(i)]==passward:
+                index=accounts.index(i)
+                print("------------------------------------------")
+                print("welcome",usernames[index])
+                print("------------------------------------------")
+                afterlogin(email)
+                break
+       else:
+           print("your email or passward are wrong")
+           home()
+#this function is to ask the user if they want to sign in or up
+def home():
+    print("------------------------------------------")
+    print("         welcome to anime world           ")
+    print("------------------------------------------")
+    
+    start=input("         if you want to:\n 1.sign in\n 2.signup\n 3.close the program\n choose 1,2 or 3\n==> ").strip() 
+    oneortwo(start)
+#this is to safe the user choice
+start=home()
